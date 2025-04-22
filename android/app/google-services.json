@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "371129962616",
+    "project_id": "escoladominical-f0c5a",
+    "storage_bucket": "escoladominical-f0c5a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:371129962616:android:e7ef90286b569b56a29d8d",
+        "android_client_info": {
+          "package_name": "com.example.escoladominical"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCseRr2Zw2Mt3cociM6LDjtypJfzUq3ILM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
