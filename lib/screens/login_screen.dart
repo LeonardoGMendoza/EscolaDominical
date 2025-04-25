@@ -158,7 +158,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Color(0xFF87CEEB), // Cor do céu (sky blue)
       body: Stack(
         children: [
           // Tela principal (sempre visível)
@@ -216,7 +216,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                         onPressed: _resetPassword,
                         child: const Text(
                           'Esqueci minha senha',
-                          style: TextStyle(color: Colors.white70),
+                          style: TextStyle(fontSize: 16, color: Colors.white70),
                         ),
                       ),
                     ),
@@ -232,7 +232,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                       ),
                       child: const Text(
                         'Entrar',
-                        style: TextStyle(fontSize: 16),
+                        style: TextStyle(fontSize: 17, color: Colors.white),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -245,7 +245,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                       },
                       child: const Text(
                         'Criar nova conta',
-                        style: TextStyle(color: Colors.white),
+                        style: TextStyle(fontSize: 16, color: Colors.white),
                       ),
                     ),
                   ],

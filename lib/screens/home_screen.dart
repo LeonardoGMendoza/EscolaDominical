@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:escoladominical/models/user_model.dart';
 import 'package:escoladominical/screens/primaryorganizationc_sreen.dart';
+import 'package:escoladominical/screens/young_men_screen.dart';
+import 'package:escoladominical/screens/youngwomen_organization_screen.dart';
+import 'package:escoladominical/screens/reliefsociety_organization_screen.dart';
+import 'package:escoladominical/screens/eldersquorum_organization_screen.dart';
+import 'package:escoladominical/screens/calendar_screen.dart';
+import 'package:escoladominical/screens/login_screen.dart';
+import 'package:escoladominical/screens/add_event_screen.dart'; // ✅ Import da AddEventScreen
 
 class HomeScreen extends StatelessWidget {
   final UserModel user;
@@ -15,9 +22,34 @@ class HomeScreen extends StatelessWidget {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.calendar_today),
+            icon: const Icon(Icons.add),
+            tooltip: 'Novo Evento',
             onPressed: () {
-              Navigator.pushNamed(context, '/calendar');
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AddEventScreen(organization: user.organization),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.calendar_today),
+            tooltip: 'Calendário',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CalendarScreen(organization: user.organization),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.exit_to_app),
+            tooltip: 'Sair',
+            onPressed: () {
+              _showLogoutDialog(context);
             },
           ),
         ],
@@ -28,7 +60,6 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Seção do perfil
               Column(
                 children: [
                   CircleAvatar(
@@ -50,10 +81,7 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ],
               ),
-
               const SizedBox(height: 30),
-
-              // Seção de informações
               Card(
                 elevation: 4,
                 shape: RoundedRectangleBorder(
@@ -70,10 +98,7 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
               ),
-
               const SizedBox(height: 30),
-
-              // Seção do calendário
               const Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
@@ -99,19 +124,13 @@ class HomeScreen extends StatelessWidget {
                       children: [
                         Icon(Icons.calendar_month, size: 50, color: Colors.grey),
                         SizedBox(height: 10),
-                        Text(
-                          'Calendário será exibido aqui',
-                          style: TextStyle(color: Colors.grey),
-                        ),
+                        Text('Calendário será exibido aqui', style: TextStyle(color: Colors.grey)),
                       ],
                     ),
                   ),
                 ),
               ),
-
               const SizedBox(height: 30),
-
-              // Seção de organizações
               const Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
@@ -146,41 +165,87 @@ class HomeScreen extends StatelessWidget {
       children: [
         Icon(icon, color: Theme.of(context).primaryColor),
         const SizedBox(width: 10),
-        Text(
-          label,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
+        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(width: 5),
-        Expanded(
-          child: Text(
-            value,
-            style: const TextStyle(fontSize: 16),
-          ),
-        ),
+        Expanded(child: Text(value, style: const TextStyle(fontSize: 16))),
       ],
     );
   }
 
   Widget _buildOrganizationChip(BuildContext context, String org, IconData icon) {
+    Widget getScreenForOrganization() {
+      switch (org) {
+        case 'Primária':
+          return PrimaryOrganizationScreen(user: user);
+        case 'Rapazes':
+          return YoungMenScreen(user: user);
+        case 'Moças':
+          return YoungWomenOrganizationScreen(user: user);
+        case 'Sociedade de Socorro':
+          return ReliefSocietyScreen(user: user);
+        case 'Quórum de Élderes':
+          return EldersQuorumOrganizationScreen(user: user);
+        default:
+          return Container();
+      }
+    }
+
+    Color getColorForOrganization() {
+      switch (org) {
+        case 'Primária':
+          return Colors.blue;
+        case 'Rapazes':
+          return Colors.blue;
+        case 'Moças':
+          return Colors.pink;
+        case 'Sociedade de Socorro':
+          return Colors.red;
+        case 'Quórum de Élderes':
+          return Colors.green;
+        default:
+          return Colors.grey;
+      }
+    }
+
     return GestureDetector(
       onTap: () {
-        if (org == 'Primária') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => PrimaryOrganizationScreen(user: user),
-            ),
-          );
-        }
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => getScreenForOrganization()),
+        );
       },
       child: Chip(
         label: Text(org),
         avatar: Icon(icon, size: 18),
-        backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
-        side: BorderSide(
-          color: Theme.of(context).primaryColor.withOpacity(0.3),
-        ),
+        backgroundColor: getColorForOrganization().withOpacity(0.1),
+        side: BorderSide(color: getColorForOrganization().withOpacity(0.3)),
       ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Sair do aplicativo'),
+          content: const Text('Você tem certeza que deseja sair?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                );
+              },
+              child: const Text('Sair'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

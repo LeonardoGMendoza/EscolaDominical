@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:escoladominical/models/user_model.dart';
 
-class PrimaryOrganizationScreen extends StatelessWidget {
+class ReliefSocietyScreen extends StatelessWidget {
   final UserModel user;
 
-  const PrimaryOrganizationScreen({Key? key, required this.user}) : super(key: key);
+  const ReliefSocietyScreen({Key? key, required this.user}) : super(key: key);
 
-  bool get isPrimaryTeacher => user.calling == 'Professor da Primária';
-  bool get isPrimaryLeader => ['Presidente da Primária', 'Conselheiro da Primária'].contains(user.calling);
+  bool get isReliefSocietyLeader => ['Presidente da Sociedade de Socorro', 'Conselheira da Sociedade de Socorro'].contains(user.calling);
+  bool get isReliefSocietyTeacher => user.calling == 'Instrutora da Sociedade de Socorro';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Organização da Primária'),
+        title: const Text('Sociedade de Socorro'),
         centerTitle: true,
+        backgroundColor: Colors.red,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -24,10 +24,10 @@ class PrimaryOrganizationScreen extends StatelessWidget {
           children: [
             _buildUserHeader(),
             const SizedBox(height: 20),
-            if (isPrimaryLeader) _buildTrainingSection(),
-            if (isPrimaryTeacher || isPrimaryLeader) _buildClassesSection(),
+            if (isReliefSocietyLeader) _buildTrainingSection(),
+            if (isReliefSocietyTeacher || isReliefSocietyLeader) _buildMinistrationSection(),
             _buildResourcesSection(),
-            if (isPrimaryLeader) _buildAdminSection(),
+            if (isReliefSocietyLeader) _buildAdminSection(),
           ],
         ),
       ),
@@ -40,7 +40,7 @@ class PrimaryOrganizationScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Row(
           children: [
-            const Icon(Icons.child_care, size: 40, color: Colors.blue),
+            const Icon(Icons.female, size: 40, color: Colors.red),
             const SizedBox(width: 16),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -76,12 +76,12 @@ class PrimaryOrganizationScreen extends StatelessWidget {
             child: Column(
               children: [
                 _buildTrainingItem(
-                  'Treinamento: Ensinar à Maneira do Salvador',
+                  'Treinamento: Ministração',
                   DateTime.now().add(const Duration(days: 14)),
                 ),
                 const Divider(),
                 _buildTrainingItem(
-                  'Conselho de Professores Trimestral',
+                  'Conselho da Presidência',
                   DateTime.now().add(const Duration(days: 30)),
                 ),
               ],
@@ -99,7 +99,7 @@ class PrimaryOrganizationScreen extends StatelessWidget {
 
   Widget _buildTrainingItem(String title, DateTime date) {
     return ListTile(
-      leading: const Icon(Icons.event, color: Colors.blue),
+      leading: const Icon(Icons.event, color: Colors.red),
       title: Text(title),
       subtitle: Text('${date.day}/${date.month}/${date.year} às 19:30'),
       trailing: const Icon(Icons.arrow_forward),
@@ -107,13 +107,13 @@ class PrimaryOrganizationScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildClassesSection() {
+  Widget _buildMinistrationSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 20),
         const Text(
-          'Classes da Primária',
+          'Grupos de Ministração',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 10),
@@ -121,22 +121,22 @@ class PrimaryOrganizationScreen extends StatelessWidget {
           spacing: 8,
           runSpacing: 8,
           children: [
-            _buildClassChip('Raios de Sol (3-4 anos)'),
-            _buildClassChip('Valentes (5-7 anos)'),
-            _buildClassChip('Meninos (8-11 anos)'),
-            _buildClassChip('Meninas (8-11 anos)'),
+            _buildGroupChip('Grupo 1'),
+            _buildGroupChip('Grupo 2'),
+            _buildGroupChip('Grupo 3'),
+            _buildGroupChip('Grupo 4'),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildClassChip(String className) {
+  Widget _buildGroupChip(String groupName) {
     return Chip(
-      label: Text(className),
-      avatar: const Icon(Icons.child_care, size: 18),
-      backgroundColor: Colors.blue.withOpacity(0.2),
-      onDeleted: isPrimaryLeader ? () {} : null,
+      label: Text(groupName),
+      avatar: const Icon(Icons.group, size: 18),
+      backgroundColor: Colors.red.withOpacity(0.2),
+      onDeleted: isReliefSocietyLeader ? () {} : null,
     );
   }
 
@@ -158,40 +158,27 @@ class PrimaryOrganizationScreen extends StatelessWidget {
           crossAxisSpacing: 10,
           mainAxisSpacing: 10,
           children: [
-            _buildResourceCard('Vem, e Segue-Me', Icons.book, 'https://www.churchofjesuschrist.org/study/come-follow-me?lang=eng'),
-            _buildResourceCard('Músicas Primária', Icons.music_note, 'https://www.churchofjesuschrist.org/music'),
-            _buildResourceCard('Atividades', Icons.games, 'https://www.churchofjesuschrist.org/youth/activities'),
-            _buildResourceCard('Manuais', Icons.library_books, 'https://www.churchofjesuschrist.org/manuals'),
+            _buildResourceCard('Vem, e Segue-Me', Icons.book),
+            _buildResourceCard('Ministração', Icons.people),
+            _buildResourceCard('Aulas Dominicais', Icons.school),
+            _buildResourceCard('Manuais', Icons.library_books),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildResourceCard(String title, IconData icon, String? url) {
-    return InkWell(
-      onTap: () async {
-        if (url != null && await canLaunchUrl(Uri.parse(url))) {
-          await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-        } else {
-          debugPrint('URL inválida ou nula: $url');
-        }
-      },
-      borderRadius: BorderRadius.circular(16),
-      child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        color: Colors.grey[100],
+  Widget _buildResourceCard(String title, IconData icon) {
+    return Card(
+      child: InkWell(
+        onTap: () {},
         child: Center(
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 40, color: Colors.blue),
-              const SizedBox(height: 8),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 16),
-              ),
+              Icon(icon, size: 40, color: Colors.red),
+              const SizedBox(height: 10),
+              Text(title, textAlign: TextAlign.center),
             ],
           ),
         ),
@@ -214,9 +201,9 @@ class PrimaryOrganizationScreen extends StatelessWidget {
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                _buildAdminItem('Relatório de Frequência', Icons.assignment),
+                _buildAdminItem('Relatório de Ministração', Icons.assignment),
                 const Divider(),
-                _buildAdminItem('Chamar Professores', Icons.person_add),
+                _buildAdminItem('Designar Irmãs', Icons.person_add),
                 const Divider(),
                 _buildAdminItem('Agendar Reuniões', Icons.calendar_today),
               ],
@@ -229,7 +216,7 @@ class PrimaryOrganizationScreen extends StatelessWidget {
 
   Widget _buildAdminItem(String title, IconData icon) {
     return ListTile(
-      leading: Icon(icon, color: Colors.blue),
+      leading: Icon(icon, color: Colors.red),
       title: Text(title),
       trailing: const Icon(Icons.arrow_forward),
       onTap: () {},

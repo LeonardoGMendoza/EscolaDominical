@@ -4,7 +4,7 @@ class Event {
   final String description;
   final DateTime date;
   final String type;
-  final String organization;
+  final String organization; // Verifique se isso existe no Firestore
   final String? teacherId;
 
   Event({
@@ -24,7 +24,7 @@ class Event {
       description: data['description'],
       date: data['date'].toDate(),
       type: data['type'],
-      organization: data['organization'],
+      organization: data['organization'], // Verifique se 'organization' existe no Firestore
       teacherId: data['teacherId'],
     );
   }

@@ -1,112 +1,128 @@
 import 'package:flutter/material.dart';
-import 'package:table_calendar/table_calendar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/event_model.dart';
+import 'package:intl/intl.dart';
+import 'package:escoladominical/models/event_model.dart'; // seu model de evento
+import 'add_event_screen.dart'; // tela de adicionar evento
 
 class CalendarScreen extends StatefulWidget {
   final String organization;
 
-  const CalendarScreen({required this.organization, Key? key}) : super(key: key);
+  const CalendarScreen({Key? key, required this.organization}) : super(key: key);
 
   @override
   _CalendarScreenState createState() => _CalendarScreenState();
 }
 //teste
 class _CalendarScreenState extends State<CalendarScreen> {
-  CalendarFormat _calendarFormat = CalendarFormat.month;
-  DateTime _focusedDay = DateTime.now();
-  DateTime? _selectedDay;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  Map<DateTime, List<Event>> _events = {};
+  late List<Event> _events;
+  bool _isLoading = true;
+  String? _selectedType;
+  final List<String> _eventTypes = ['Todos', 'Aula', 'Reunião', 'Treinamento'];
 
   @override
   void initState() {
     super.initState();
-    _selectedDay = _focusedDay;
+    _events = [];
     _loadEvents();
   }
 
   Future<void> _loadEvents() async {
-    final snapshot = await _firestore
-        .collection('events')
-        .where('organization', isEqualTo: widget.organization)
-        .get();
+    try {
+      Query query = FirebaseFirestore.instance
+          .collection('events')
+          .where('organization', isEqualTo: widget.organization);
 
-    final eventsMap = <DateTime, List<Event>>{};
+      if (_selectedType != null && _selectedType != 'Todos') {
+        query = query.where('type', isEqualTo: _selectedType);
+      }
 
-    for (var doc in snapshot.docs) {
-      final event = Event.fromMap(doc.data(), doc.id);
-      final date = DateTime(event.date.year, event.date.month, event.date.day);
+      final snapshot = await query.get();
 
-      eventsMap[date] ??= [];
-      eventsMap[date]!.add(event);
+      final events = snapshot.docs.map((doc) {
+        final data = doc.data();
+        if (data is Map<String, dynamic>) {
+          return Event.fromMap(data, doc.id);
+        } else {
+          throw Exception('Dados do Firestore inválidos para o documento: \${doc.id}');
+        }
+      }).toList();
+
+      setState(() {
+        _events = events;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Erro ao carregar eventos: \$e');
+      setState(() {
+        _isLoading = false;
+      });
     }
-
-    setState(() => _events = eventsMap);
   }
 
-  List<Event> _getEventsForDay(DateTime day) {
-    return _events[DateTime(day.year, day.month, day.day)] ?? [];
+  void _navigateToAddEvent() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AddEventScreen(organization: widget.organization),
+      ),
+    );
+    _loadEvents(); // Atualiza eventos após adicionar
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Calendário - ${widget.organization}'),
+        title: Text('Eventos da \${widget.organization}'),
         actions: [
           IconButton(
-            icon: Icon(Icons.refresh),
-            onPressed: _loadEvents,
+            icon: Icon(Icons.add),
+            onPressed: _navigateToAddEvent,
+            tooltip: 'Agendar Novo Evento',
           ),
         ],
       ),
       body: Column(
         children: [
-          TableCalendar<Event>(
-            firstDay: DateTime.utc(2020, 1, 1),
-            lastDay: DateTime.utc(2030, 12, 31),
-            focusedDay: _focusedDay,
-            calendarFormat: _calendarFormat,
-            selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-            onDaySelected: (selectedDay, focusedDay) {
-              setState(() {
-                _selectedDay = selectedDay;
-                _focusedDay = focusedDay;
-              });
-            },
-            onFormatChanged: (format) {
-              setState(() => _calendarFormat = format);
-            },
-            onPageChanged: (focusedDay) => _focusedDay = focusedDay,
-            eventLoader: _getEventsForDay,
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: DropdownButton<String>(
+              value: _selectedType ?? 'Todos',
+              items: _eventTypes.map((type) {
+                return DropdownMenuItem<String>(
+                  value: type,
+                  child: Text(type),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedType = value;
+                  _isLoading = true;
+                });
+                _loadEvents();
+              },
+              hint: Text('Filtrar por tipo'),
+            ),
           ),
-          const SizedBox(height: 8.0),
           Expanded(
-            child: ListView.builder(
-              itemCount: _getEventsForDay(_selectedDay!).length,
+            child: _isLoading
+                ? Center(child: CircularProgressIndicator())
+                : _events.isEmpty
+                ? Center(child: Text('Nenhum evento encontrado.'))
+                : ListView.builder(
+              itemCount: _events.length,
               itemBuilder: (context, index) {
-                final event = _getEventsForDay(_selectedDay!)[index];
+                final event = _events[index];
                 return Card(
                   child: ListTile(
                     title: Text(event.title),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(event.description),
-                        Text('Tipo: ${event.type}'),
-                        if (event.teacherId != null)
-                          FutureBuilder<DocumentSnapshot>(
-                            future: _firestore.collection('users').doc(event.teacherId).get(),
-                            builder: (context, snapshot) {
-                              if (snapshot.hasData) {
-                                return Text('Professor: ${snapshot.data!['name']}');
-                              }
-                              return SizedBox();
-                            },
-                          ),
-                      ],
+                    subtitle: Text(event.description),
+                    trailing: Text(
+                      DateFormat('dd/MM/yyyy').format(event.date),
                     ),
+                    onTap: () {
+                      print('Evento clicado: \${event.title}');
+                    },
                   ),
                 );
               },
@@ -114,12 +130,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
-        onPressed: () => _showAddEventDialog(),
-      ),
     );
   }
+
 
   Future<void> _showAddEventDialog() async {
     // Implementar diálogo para adicionar novo evento
